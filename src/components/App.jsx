@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wrapper } from './App.styled';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
@@ -8,108 +8,82 @@ import { Modal } from './Modal/Modal';
 import { Toaster } from 'react-hot-toast';
 import * as API from 'services/image-api';
 
-export class App extends Component {
-  state = {
-    images: [],
-    loading: false,
-    query: '',
-    totalImages: null,
-    page: 1,
-    error: null,
-    showModal: false,
-    modalImage: '',
-  };
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [query, setUqery] = useState('');
+  const [totalImages, setTotalImages] = useState(null);
+  const [page, setPage] = useState(1);
+  const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [modalImage, setModalImage] = useState('');
 
-  async componentDidUpdate(_, prevState) {
-    const prevQuery = prevState.query;
-    const nextQuery = this.state.query;
-    const prevPage = prevState.page;
-    const nextPage = this.state.page;
-
-    if (prevPage !== nextPage) {
-      try {
-        this.setState({ loading: true });
-        const response = await API.getImages(this.state.query, this.state.page);
-        const responseImages = response.hits;
-        const responseTotalImages = response.totalHits;
-        this.setState({
-          loading: false,
-          images: [...prevState.images, ...responseImages],
-          totalImages: responseTotalImages,
-        });
-      } catch (error) {
-        this.setState({ error });
-      } finally {
-        this.setState({ loading: false });
-      }
+  useEffect(() => {
+    if (query === '') {
+      return;
     }
 
-    if (prevQuery !== nextQuery) {
-      this.setState({ images: [], page: 1 });
+    const controller = new AbortController();
+    async function fetchData() {
       try {
-        this.setState({ loading: true, images: [] });
-        const response = await API.getImages(this.state.query, this.state.page);
+        setLoading(true);
+        const response = await API.getImages(query, page, controller);
         const responseImages = response.hits;
         const responseTotalImages = response.totalHits;
-        this.setState({
-          loading: false,
-          images: [...responseImages],
-          totalImages: responseTotalImages,
-        });
+
+        setLoading(false);
+        setImages(prevImages => [...prevImages, ...responseImages]);
+        setTotalImages(responseTotalImages);
       } catch (error) {
-        this.setState({ error });
+        setError(error);
       } finally {
-        this.setState({ loading: false });
+        setLoading(false);
       }
     }
-  }
+    fetchData();
 
-  handleFormSubmit = ({ query }) => {
-    this.setState({ images: [], query, page: 1 });
+    return () => {
+      controller.abort();
+    };
+  }, [page, query]);
+
+  const handleFormSubmit = ({ query }) => {
+    setUqery(query);
+    setImages([]);
+    setPage(1);
   };
 
-  loadingLargeImage = event => {
+  const loadingLargeImage = event => {
     if (event.target.nodeName !== 'IMG') {
       return;
     }
 
-    this.setState({
-      showModal: true,
-      modalImage: event.target.dataset.src,
-    });
+    setShowModal(true);
+    setModalImage(event.target.dataset.src);
   };
 
-  toggleModal = () => {
-    this.setState(prevState => ({ showModal: !prevState.showModal }));
+  const toggleModal = () => {
+    setShowModal(prevState => !prevState);
   };
 
-  loadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const loadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  render() {
-    const { images, loading, totalImages, page, error, showModal, modalImage } =
-      this.state;
-    const showLoadMoreButton =
-      totalImages > 0 && Math.ceil(totalImages / 12) !== page;
+  const showLoadMoreButton =
+    totalImages > 0 && Math.ceil(totalImages / 12) !== page;
 
-    return (
-      <Wrapper>
-        <Searchbar onSubmit={this.handleFormSubmit} />
-        {error && <p>Whoops, something went wrong: {error.message}</p>}
-        {images.length > 0 && (
-          <ImageGallery
-            images={images}
-            loadLargeImage={this.loadingLargeImage}
-          />
-        )}
-        {loading && <Loader />}
-        {showLoadMoreButton && !loading && <Button loadMore={this.loadMore} />}
-        {showModal && (
-          <Modal image={modalImage} closeModal={this.toggleModal} />
-        )}
-        <Toaster position="top-right" reverseOrder={false} />
-      </Wrapper>
-    );
-  }
-}
+  return (
+    <Wrapper>
+      <Searchbar onSubmit={handleFormSubmit} />
+      {error && <p>Whoops, something went wrong: {error.message}</p>}
+      {images.length > 0 && (
+        <ImageGallery images={images} loadLargeImage={loadingLargeImage} />
+      )}
+      {loading && <Loader />}
+      {showLoadMoreButton && !loading && <Button loadMore={loadMore} />}
+      {showModal && <Modal image={modalImage} closeModal={toggleModal} />}
+      <Toaster position="top-right" reverseOrder={false} />
+    </Wrapper>
+  );
+};

@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-export const getImages = async (query = '', page = 1) => {
+export const getImages = async (query = '', page = 1, controller) => {
   const response = await axios.get('https://pixabay.com/api/', {
+    signal: controller.signal,
     params: {
       q: `${query}`,
       page: `${page}`,
