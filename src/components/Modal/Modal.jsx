@@ -1,23 +1,26 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import { ModalWindowOverlay, ModalWindow } from './Modal.styled';
 
 export const Modal = ({ image, closeModal }) => {
+  const clickEscape = useCallback(
+    event => {
+      if (event.code !== 'Escape') {
+        return;
+      }
+      closeModal();
+    },
+    [closeModal]
+  );
+
   useEffect(() => {
     window.addEventListener('keydown', clickEscape);
 
     return () => {
       window.removeEventListener('keydown', clickEscape);
     };
-  }, []);
-
-  const clickEscape = event => {
-    if (event.code !== 'Escape') {
-      return;
-    }
-    closeModal();
-  };
+  }, [clickEscape]);
 
   const clickOverlay = event => {
     if (event.target !== event.currentTarget) {

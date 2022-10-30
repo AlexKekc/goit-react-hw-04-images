@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Wrapper } from './App.styled';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
@@ -62,16 +62,16 @@ export const App = () => {
     setModalImage(event.target.dataset.src);
   };
 
-  const toggleModal = () => {
+  const toggleModal = useCallback(() => {
     setShowModal(prevState => !prevState);
-  };
+  }, []);
 
   const loadMore = () => {
     setPage(prevPage => prevPage + 1);
   };
 
   const showLoadMoreButton =
-    totalImages > 0 && Math.ceil(totalImages / 12) !== page && !loading;
+    totalImages > 0 && Math.ceil(totalImages / 12) !== page;
 
   return (
     <Wrapper>
@@ -81,7 +81,7 @@ export const App = () => {
         <ImageGallery images={images} loadLargeImage={loadingLargeImage} />
       )}
       {loading && <Loader />}
-      {showLoadMoreButton && <Button loadMore={loadMore} />}
+      {showLoadMoreButton && !loading && <Button loadMore={loadMore} />}
       {showModal && <Modal image={modalImage} closeModal={toggleModal} />}
       <Toaster position="top-right" reverseOrder={false} />
     </Wrapper>
