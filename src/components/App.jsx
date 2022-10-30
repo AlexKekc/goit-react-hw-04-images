@@ -71,7 +71,7 @@ export const App = () => {
   };
 
   const showLoadMoreButton =
-    totalImages > 0 && Math.ceil(totalImages / 12) !== page;
+    totalImages > 0 && Math.ceil(totalImages / 12) !== page && !loading;
 
   return (
     <Wrapper>
@@ -81,7 +81,7 @@ export const App = () => {
         <ImageGallery images={images} loadLargeImage={loadingLargeImage} />
       )}
       {loading && <Loader />}
-      {showLoadMoreButton && !loading && <Button loadMore={loadMore} />}
+      {showLoadMoreButton && <Button loadMore={loadMore} />}
       {showModal && <Modal image={modalImage} closeModal={toggleModal} />}
       <Toaster position="top-right" reverseOrder={false} />
     </Wrapper>
