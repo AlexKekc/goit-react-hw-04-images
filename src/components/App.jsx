@@ -11,7 +11,7 @@ import * as API from 'services/image-api';
 export const App = () => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [query, setUqery] = useState('');
+  const [query, setQuery] = useState('');
   const [totalImages, setTotalImages] = useState(null);
   const [page, setPage] = useState(1);
   const [error, setError] = useState(null);
@@ -48,7 +48,7 @@ export const App = () => {
   }, [page, query]);
 
   const handleFormSubmit = ({ query }) => {
-    setUqery(query);
+    setQuery(query);
     setImages([]);
     setPage(1);
   };
